@@ -31,6 +31,7 @@ class VariableAdd(Operation):
         np.array([6, 3, 100]).'''
 
         assert len(summands) > 0, "Add called with no inputs!"
+            
         shape = summands[0].data.shape
         for summand in summands:
             assert summand.data.shape == shape, "Shape mismatch in Add: shapes: {}".format(
@@ -175,11 +176,10 @@ class MatrixMultiply(Operation):
 
     def backward_call(self, downstream_grad):
 
-        #why won't this work T_T
         A = self.parents[0].data
         B = self.parents[1].data
-        grad_A = downstream_grad@B.T
-        grad_B = A.T@downstream_grad
+        grad_A = downstream_grad * B.T
+        grad_B = A.T * downstream_grad
         return [grad_A, grad_B]
         
 

@@ -42,8 +42,8 @@ class Operation(object):
             self.name, args, kwargs, self.parents)
         
         ### YOUR CODE HERE ###
-        assert hasattr(self.parents,'__getitem__')
-        [parent.children.append(self) for parent in self.parents]
+        for parent in self.parents:
+            parent.children.append(self)
         assert type(output) != Variable
         self.child = Variable(output,parent=self)
         return self.child

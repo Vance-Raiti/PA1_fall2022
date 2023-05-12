@@ -20,9 +20,8 @@ def SGD(loss_fn, params, data, learning_rate):
     ### YOUR CODE HERE ###
     
     
-    for d in data:
-        loss, correct = loss_fn(params,d)
-        loss.backward()
+    loss, correct = loss_fn(params,data)
+    loss.backward()
     
     for param in params:
         param.data -= param.grad*learning_rate

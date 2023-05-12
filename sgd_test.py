@@ -38,17 +38,16 @@ def loss_fn(params, data):
     label = data[1]
     
     features = Variable(features)
-    weights = Variable(params[0])
-    bias = Variable(params[1])
+    weights = params[0]
+    bias = params[1]
     adder = ops.VariableAdd()
     matmult = ops.MatrixMultiply()
     hinge = ops.HingeLoss(label)
     
-    prod = Variable(matmult(weights,features))
-    model_out = Variable(adder(bias,prod))
+    prod = matmult(weights,features)
+    model_out = adder([bias,prod])
     loss = hinge(model_out)
-    correct = model_out.data == label
-    print(type(correct))
+    correct = np.argmax(model_out.data) == label
 
     
     
