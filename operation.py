@@ -18,14 +18,16 @@ class Operation(object):
 
         # name string for printing error messages.
         self.name = name
-
         # flag for error-checking
         self.forward_called = False
-
-
+        
+        # flag to prevent exponential-time computations
+        self.backward_called = False
+        
+        
     def __call__(self, *args, **kwargs):
         return self.forward(*args, **kwargs)
-
+    
     def forward(self, *args, **kwargs):
         '''wrapper around forward_call to set forward_called flag. Also checks
         that parents are set properly.
@@ -38,10 +40,13 @@ class Operation(object):
         output = self.forward_call(*args, **kwargs)
         assert self.parents is not None, "forward did not set self.parents on {} operation! Inputs: args: {}, kwargs: {}. self.parents: {}".format(
             self.name, args, kwargs, self.parents)
-
-        ### YOUR CODE HERE ###
         
-        raise NotImplementedError
+        ### YOUR CODE HERE ###
+        assert hasattr(self.parents,'__getitem__')
+        [parent.children.append(self) for parent in self.parents]
+        assert type(output) != Variable
+        self.child = Variable(output,parent=self)
+        return self.child
 
     def backward(self, downstream_grad):
         '''wrapper around backward_call to check assertion that forward was
@@ -70,7 +75,10 @@ class Operation(object):
 
         ### YOUR CODE HERE ###
         
-        raise NotImplementedError 
+        grads = self.backward_call(downstream_grad)
+        self.backward_called = True
+        for parent, grad in zip(self.parents,grads):
+            parent.backward(grad)
 
 
     def backward_call(self, downstream_grad):
@@ -96,8 +104,8 @@ class Operation(object):
                 computation computes a scalar, G(F(x)), then downstream_grad is
                 dG/dF.
 
-                If F(x)\in R^n, then downstream_grad should be a map from R^n -> R
-                and so is a 1 x n tensor. If F(x) \in R^(a x b) (i.e. a matrix)
+                If F(x) is in R^n, then downstream_grad should be a map from R^n -> R
+                and so is a 1 x n tensor. If F(x) is in R^(a x b) (i.e. a matrix)
                 then downstream_grad is a tensor represnting a map R^(a x b) -> R
                 an so is a 1 x a x b tensor.
 

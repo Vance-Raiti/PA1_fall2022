@@ -1,7 +1,22 @@
 '''implements Variable class that wraps numpy arrays.'''
 
 import numpy as np
+def any_children(node):
+    a = hasattr(node,"child") and node.child is not None
+    b = hasattr(node,"children") and node.children is not None
+    return a or b
 
+def graph_len(head):
+    current = head
+    l = 0
+    while any_children(current):
+        l+=1
+        if hasattr(head,"child"):
+            current = current.child
+        else:
+            current = current.children[0]
+        return l
+    
 class Variable(object):
     '''Variable class holds a numpy array and pointers for autodiff graph.
     
@@ -20,13 +35,17 @@ class Variable(object):
             self.data = np.expand_dims(self.data, 0)
 
         ### YOUR CODE HERE (IF NEEDED) ###
+        self.grad = None
+        self.parent = parent
+        self.children = []
+        self.n_grads_accumulated = 0
 
         
 
     def detach(self):
         '''detach tensor from computation graph so that gradient computation stops.'''
         self.parent=None
-
+    
     def backward(self, downstream_grad=None):
         '''
         backward pass.
@@ -56,10 +75,15 @@ class Variable(object):
         if self.grad is None:
             self.grad = np.zeros_like(downstream_grad)
 
+        
 
         ### YOUR CODE HERE ###
-
-        raise NotImplementedError 
+        
+        self.grad += downstream_grad
+        self.n_grads_accumulated += 1
+        if all([child.backward_called for child in self.children]):
+            if self.parent:
+                self.parent.backward(self.grad)
 
 
 

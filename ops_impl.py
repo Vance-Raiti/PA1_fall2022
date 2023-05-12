@@ -37,7 +37,11 @@ class VariableAdd(Operation):
                 [summand.data.shape for summand in summands])
 
         ### YOUR CODE HERE ###
-        raise NotImplementedError 
+        self.parents = summands
+        sum = np.zeros_like(summands[0].data)
+        for summand in summands:
+            sum += summand.data
+        return sum
 
     def backward_call(self, downstream_grad):
         '''
@@ -50,7 +54,9 @@ class VariableAdd(Operation):
             of the input list to forward_call.'''
 
         ### YOUR CODE HERE ###
-        raise NotImplementedError 
+        
+        return [downstream_grad for parent in self.parents]
+            
 
 class VariableMultiply(Operation):
     '''coordinate-wise multiply operation.'''
@@ -79,19 +85,33 @@ class VariableMultiply(Operation):
         '''
 
         assert len(multiplicands) > 0, "Multiply called with no inputs!"
+
         shape = multiplicands[0].data.shape
         for multiplicand in multiplicands:
             assert multiplicand.data.shape == shape, "Shape mismatch in Multiply!"
 
         ### YOUR CODE HERE ###
-        raise NotImplementedError 
+        self.parents = multiplicands
+        prod = np.ones_like(multiplicands[0].data)
+        for multiplicand in multiplicands:
+            prod *= multiplicand.data
+        return prod 
 
     def backward_call(self, downstream_grad):
 
 
         ### YOUR CODE HERE ###
-
-        raise NotImplementedError 
+        output = []
+        for parent_i, parent in enumerate(self.parents):
+            prod = downstream_grad.copy()
+            for other_parent_i, other_parent in enumerate(self.parents):
+                if other_parent_i != parent_i:
+                    prod *= other_parent.data
+            output.append(prod)         
+        
+        return output
+        
+        
 
 
 class ScalarMultiply(Operation):
@@ -117,12 +137,16 @@ class ScalarMultiply(Operation):
         assert scalar.data.size == 1, "ScalarMultiply called with non-scalar input!"
 
         ### YOUR CODE HERE ###
-        raise NotImplementedError 
+        self.parents = [scalar,tensor]
+        return tensor.data*scalar.data
 
     def backward_call(self, downstream_grad):
 
         ### YOUR CODE HERE  ###
-        raise NotImplementedError 
+        mat_dim = len(self.parents[1].data.shape)
+        scalar_gradient = np.tensordot(downstream_grad,self.parents[1].data,mat_dim)
+        tensor_gradient = downstream_grad*self.parents[0].data
+        return [scalar_gradient, tensor_gradient]
 
 
 
@@ -145,13 +169,19 @@ class MatrixMultiply(Operation):
             "inputs to matrix multiply are not matrices! A shape: {}, B shape: {}".format(A.data.shape, B.data.shape)
         
         ### YOUR CODE HERE ###
-        raise NotImplementedError 
+        output = A.data@B.data
+        self.parents = [A,B]
+        return output 
 
     def backward_call(self, downstream_grad):
 
-        ### YOUR CODE HERE ###
-
-        raise NotImplementedError 
+        #why won't this work T_T
+        A = self.parents[0].data
+        B = self.parents[1].data
+        grad_A = downstream_grad@B.T
+        grad_B = A.T@downstream_grad
+        return [grad_A, grad_B]
+        
 
 
 class HingeLoss(Operation):
@@ -181,8 +211,11 @@ class HingeLoss(Operation):
         '''
 
         ### YOUR CODE HERE ###
-
-        raise NotImplementedError 
+        self.parents = [scores]
+        label = self.label
+        return (np.sum(np.maximum(scores.data - scores.data[label] + 1.0, 0.0)) - 1.0)/scores.data.shape[0]
+        
+     
 
     def backward_call(self, downstream_grad):
         '''
@@ -194,10 +227,13 @@ class HingeLoss(Operation):
         returns:
             gradient of final output with respect to input scores of hinge loss.
         '''
-
         ### YOUR CODE HERE ###
-
-        raise NotImplementedError 
+        this_grad = (self.parents[0].data+1)>self.parents[0].data[self.label]
+        this_grad[self.label] = 0
+        this_grad = this_grad.astype('float')
+        this_grad[self.label] = -np.sum(this_grad)
+        return [downstream_grad * this_grad/(self.parents[0].data.shape[0])]
+        
 
 class Power(Operation):
     '''raise to a power'''

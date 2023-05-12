@@ -79,7 +79,8 @@ def test_backward_random(input_shapes, output_shape, reference_fn, operation_fn,
     output = operation_fn(tensors)
     output.backward(downstream_grad)
 
-    analytic = [var.grad.data for var in tensors]
+    ## THIS LINE WAS MODIFIED because the implementation seems to suggest that Variable.grad is an ndarray, not a Variable object ###
+    analytic = [var.grad for var in tensors]
     diff = np.sum([np.linalg.norm(a-n)/(1e-10 + np.linalg.norm(a+n))
                    for a, n in zip(numeric, analytic)])
     return diff
@@ -510,7 +511,7 @@ class TestAutograd(unittest.TestCase):
             w = add3([z, x])
 
             return w
-
+        np.random.seed(seed=0)
         self._test_op(input_shapes, output_shape, reference_fn,
                       operation_fn, positive=False)
 

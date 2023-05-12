@@ -33,8 +33,25 @@ def loss_fn(params, data):
             and correct is a float that is 1.0 if scores[label] is the largest
             score and 0.0 otherwise.
     '''
-
     ### YOUR CODE HERE ###
+    features = data[0]
+    label = data[1]
+    
+    features = Variable(features)
+    weights = Variable(params[0])
+    bias = Variable(params[1])
+    adder = ops.VariableAdd()
+    matmult = ops.MatrixMultiply()
+    hinge = ops.HingeLoss()
+    
+    prod = Variable(matmult(weights,features))
+    model_out = Variable(adder(bias,prod))
+    loss = hinge(model_out)
+    correct = model_out.data == label
+    print(type(correct))
+
+    
+    
     return loss, correct
 
 def get_scores(features, params):
