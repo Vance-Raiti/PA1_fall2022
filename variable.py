@@ -81,7 +81,7 @@ class Variable(object):
         
         self.grad += downstream_grad
         self.n_grads_accumulated += 1
-        if all([child.backward_called for child in self.children]):
+        if all([child.backward_called for child in self.children]) and len(self.children)<=self.n_grads_accumulated:
             if self.parent:
                 self.parent.backward(self.grad)
 

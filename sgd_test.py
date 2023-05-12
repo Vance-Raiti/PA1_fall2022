@@ -42,7 +42,7 @@ def loss_fn(params, data):
     bias = Variable(params[1])
     adder = ops.VariableAdd()
     matmult = ops.MatrixMultiply()
-    hinge = ops.HingeLoss()
+    hinge = ops.HingeLoss(label)
     
     prod = Variable(matmult(weights,features))
     model_out = Variable(adder(bias,prod))

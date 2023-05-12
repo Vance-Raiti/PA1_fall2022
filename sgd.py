@@ -21,7 +21,7 @@ def SGD(loss_fn, params, data, learning_rate):
     
     
     for d in data:
-        loss, correct = loss_fn(d)
+        loss, correct = loss_fn(params,d)
         loss.backward()
     
     for param in params:
